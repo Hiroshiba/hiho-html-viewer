@@ -1,6 +1,7 @@
 import type { Dirent } from "node:fs";
 import {
   copyFile,
+  lstat,
   mkdir,
   readFile,
   readdir,
@@ -17,6 +18,8 @@ import {
 import { z } from "zod";
 
 const pageListPlaceholder = "<div data-page-list></div>";
+const faviconSourceRelativePath = join(".github", "pages", "favicon.png");
+const generatedFaviconPath = "favicon.png";
 const generatedStylePath = "viewer.css";
 const excludedDirectoryNames = new Set(["node_modules", "_site"]);
 
@@ -68,6 +71,7 @@ export async function buildSite(options: BuildOptions): Promise<void> {
   const outputDirectory = resolve(validatedOptions.outputDirectory);
 
   validateOutputDirectory(sourceDirectory, outputDirectory);
+  await validateFaviconFile(sourceDirectory);
 
   const rootEntries = await readSortedEntries(sourceDirectory);
   validateIndexTemplateEntry(rootEntries);
@@ -88,12 +92,25 @@ export async function buildSite(options: BuildOptions): Promise<void> {
 
   await rm(outputDirectory, { force: true, recursive: true });
   await mkdir(outputDirectory, { recursive: true });
+  await copyFavicon(sourceDirectory, outputDirectory);
 
   for (const plannedFile of plannedFiles) {
     await copyPlannedFile(sourceDirectory, outputDirectory, plannedFile);
   }
 
   await writeFile(join(outputDirectory, "index.html"), renderedIndex, "utf8");
+}
+
+async function validateFaviconFile(sourceDirectory: string): Promise<void> {
+  const faviconStats = await lstat(
+    join(sourceDirectory, faviconSourceRelativePath),
+  );
+
+  if (!faviconStats.isFile() || faviconStats.isSymbolicLink()) {
+    throw new Error(
+      `${formatPath(faviconSourceRelativePath)}は通常ファイルにしてください`,
+    );
+  }
 }
 
 function validateOutputDirectory(
@@ -267,6 +284,10 @@ function validateDestinations(plannedFiles: PlannedFile[]): void {
     description: "一覧ページ",
     kind: "generated",
   });
+  registerDestination(destinations, generatedFaviconPath, {
+    description: "favicon",
+    kind: "generated",
+  });
   registerDestination(destinations, generatedStylePath, {
     description: "一覧ページ用CSS",
     kind: "generated",
@@ -401,6 +422,16 @@ async function copyPlannedFile(
   await copyFile(
     join(sourceDirectory, plannedFile.sourceRelativePath),
     destinationPath,
+  );
+}
+
+async function copyFavicon(
+  sourceDirectory: string,
+  outputDirectory: string,
+): Promise<void> {
+  await copyFile(
+    join(sourceDirectory, faviconSourceRelativePath),
+    join(outputDirectory, generatedFaviconPath),
   );
 }
 
