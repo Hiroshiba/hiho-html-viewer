@@ -43,6 +43,8 @@ hoge/
 
 隠しファイルと隠しディレクトリ、`node_modules`、`_site` は公開しません。シンボリックリンクを含めるとビルドが失敗します。
 
+一覧ページのfaviconには `.github/pages/favicon.png` を使用します。その他の公開HTMLにはfaviconを追加せず、元の内容をそのまま配信します。
+
 ## mainブランチへのpushで公開する
 
 `main` ブランチへpushすると、GitHub Actionsが自動的にGitHub Pagesへデプロイします。Actions画面から手動実行することもできます。
