@@ -34,6 +34,8 @@ hoge/
 
 `index.html` 以外のHTMLは、ファイル名と同じディレクトリの `index.html` へ変換します。この変換によって相対パスの基準も変わるため、ルート直下に置くHTMLは自己完結させてください。
 
+一覧ページのfaviconには `.github/pages/favicon.png` を使用します。その他の公開HTMLにはfaviconを追加せず、元の内容をそのまま配信します。
+
 ## デプロイ
 
 `main` ブランチへpushすると、GitHub Actionsが自動的にGitHub Pagesへデプロイします。Actions画面から手動実行することもできます。

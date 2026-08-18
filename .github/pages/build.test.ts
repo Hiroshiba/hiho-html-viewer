@@ -7,7 +7,8 @@ import type { TestContext } from "node:test";
 
 import { buildSite } from "./build.ts";
 
-const indexTemplate = "<html><body><div data-page-list></div></body></html>";
+const indexTemplate =
+  '<html><head><link rel="icon" href="./favicon.png"></head><body><div data-page-list></div></body></html>';
 
 void test(
   "HTMLを末尾スラッシュURLへ正規化して一覧へ追加する",
@@ -69,6 +70,18 @@ void test(
     await assertPathDoesNotExist(join(outputDirectory, "root.css"));
     await assertPathDoesNotExist(join(outputDirectory, ".github"));
     await assertPathDoesNotExist(join(outputDirectory, "node_modules"));
+    assert.equal(
+      await readFile(join(outputDirectory, "favicon.png"), "utf8"),
+      "favicon",
+    );
+
+    assert.equal(
+      await readFile(
+        join(outputDirectory, "nested", "White Space #", "index.html"),
+        "utf8",
+      ),
+      "<h1>space</h1>",
+    );
 
     const renderedIndex = await readFile(
       join(outputDirectory, "index.html"),
@@ -81,6 +94,7 @@ void test(
       /href="nested\/White%20Space%20%23\/"/u,
     );
     assert.match(renderedIndex, /nested\/White Space #\//u);
+    assert.match(renderedIndex, /href="\.\/favicon\.png"/u);
     assert.doesNotMatch(renderedIndex, /data-page-list/u);
   },
 );
@@ -150,6 +164,11 @@ async function createSourceDirectory(context: TestContext): Promise<string> {
     await rm(sourceDirectory, { force: true, recursive: true });
   });
   await writeFixture(sourceDirectory, "index.html", indexTemplate);
+  await writeFixture(
+    sourceDirectory,
+    join(".github", "pages", "favicon.png"),
+    "favicon",
+  );
 
   return sourceDirectory;
 }
