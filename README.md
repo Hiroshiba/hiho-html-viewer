@@ -1,10 +1,10 @@
 # hiho-html-viewer
 
-リポジトリに配置したHTMLをGitHub Pagesで公開します。公開ページはルートの一覧へ自動的に追加されます。
+このリポジトリへ追加したHTMLページをGitHub Pagesで公開します。各ページへのリンクはトップページへ自動で追加します。
 
-## ページを追加する
+## HTMLページを追加する
 
-自己完結したHTMLはリポジトリ直下へ配置できます。
+画像やCSSなどの外部ファイルを使わないページは、HTMLファイルだけで追加できます。
 
 | 配置 | 公開URL |
 | --- | --- |
@@ -13,7 +13,7 @@
 | `foo/bar.html` | `https://hihok.github.io/hiho-html-viewer/foo/bar/` |
 | `My Page.html` | `https://hihok.github.io/hiho-html-viewer/My%20Page/` |
 
-画像やCSSを使用するページはディレクトリへまとめます。
+画像やCSSを使うページは、専用のディレクトリにまとめます。HTMLを `index.html` として置くと、素材への相対パスを変えずに公開できます。
 
 ```text
 hoge/
@@ -22,21 +22,30 @@ hoge/
   style.css
 ```
 
-`hoge.html` と `hoge/index.html` のように公開URLが重複するHTMLを同時に置くと、ビルドは失敗します。
+## 公開時の変換と制約
 
-ルートの `index.html` は一覧ページのテンプレートです。`data-page-list` 属性を持つ要素を、ビルド時にページ一覧へ置き換えます。
+ルートの `index.html` は一覧ページのテンプレートです。次の文字列を1つだけ配置してください。ビルド時にこの文字列がページ一覧へ置き換わります。
 
-## 公開対象
+```html
+<div data-page-list></div>
+```
 
-ルート直下ではHTMLだけを公開します。`README.md`、`prompt.txt`、パッケージ設定などは公開しません。
+`index.html` 以外のHTMLは、同じ名前のディレクトリにある `index.html` へ変換します。たとえば `hoge.html` は `hoge/index.html`、`foo/bar.html` は `foo/bar/index.html` になります。この変換によって相対パスの基準も変わります。素材を使うページは、ディレクトリ配下の `index.html` として配置してください。
 
-隠しファイルと隠しディレクトリ、`node_modules`、`_site` も公開しません。それ以外のディレクトリでは、HTMLに加えて画像やCSSなどもディレクトリ構造を維持して公開します。
+変換後の出力先が重複する配置ではビルドが失敗します。`hoge.html` と `hoge/index.html` を同時に置く場合が該当します。変換後にファイルとディレクトリが衝突する配置も使用できません。
 
-`index.html` 以外のHTMLは、ファイル名と同じディレクトリの `index.html` へ変換します。この変換によって相対パスの基準も変わるため、ルート直下に置くHTMLは自己完結させてください。
+## 公開するファイル
+
+公開対象は配置場所によって異なります。
+
+- ルート直下では、一覧用の `index.html` と拡張子が `.html` のファイルだけを公開します
+- サブディレクトリでは、HTMLに加えて画像やCSSなどのファイルもディレクトリ構造を維持して公開します
+
+隠しファイルと隠しディレクトリ、`node_modules`、`_site` は公開しません。シンボリックリンクを含めるとビルドが失敗します。
 
 一覧ページのfaviconには `.github/pages/favicon.png` を使用します。その他の公開HTMLにはfaviconを追加せず、元の内容をそのまま配信します。
 
-## デプロイ
+## mainブランチへのpushで公開する
 
 `main` ブランチへpushすると、GitHub Actionsが自動的にGitHub Pagesへデプロイします。Actions画面から手動実行することもできます。
 
@@ -44,7 +53,7 @@ hoge/
 
 ローカルから直接デプロイする方法はありません。
 
-## 開発
+## ローカルで検証する
 
 Node.js 24とpnpm 10を使用します。
 
