@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOICEVOX インストール経路 — 現行と目標</title>
+<style>
+:root{
+  --bg:#f3f5f8;--paper:#fff;--ink:#172033;--muted:#5c6778;--line:#d8dde6;
+  --current:#b43d55;--current-soft:#fff4f6;--goal:#087a68;--goal-soft:#eef9f6;
+  --issue:#b4233d;--issue-soft:#fff0f2;--warn:#976400;--warn-soft:#fff7df;
+  --change:#315f9d;--change-soft:#f0f5fd;--shadow:0 14px 40px rgba(23,32,51,.07);--radius:22px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Hiragino Sans","Yu Gothic UI",sans-serif;line-height:1.55}
+code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+.page{max-width:1500px;margin:0 auto;padding:36px 34px 72px}
+.hero{padding:29px 30px 30px;background:linear-gradient(130deg,#17233b,#203654);color:#fff;border-radius:28px;box-shadow:var(--shadow)}
+.eyebrow{font-size:13px;font-weight:850;letter-spacing:.12em;opacity:.74}
+.hero h1{margin:9px 0 0;font-size:clamp(32px,4.2vw,58px);line-height:1.08;letter-spacing:-.04em}
+.hero-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+.hero-state{padding:15px 17px;border:1px solid rgba(255,255,255,.22);border-radius:15px;background:rgba(255,255,255,.06);font-size:17px;font-weight:850}
+.hero-state.goal{background:rgba(55,214,178,.13);border-color:rgba(120,241,212,.44)}
+.hero-state small{display:block;margin-top:4px;font-size:13px;font-weight:650;opacity:.76}
+.section{margin-top:38px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 4px 16px}
+.section-kicker{font-size:13px;font-weight:850;letter-spacing:.1em;color:var(--muted)}
+.section h2{margin:4px 0 0;font-size:clamp(25px,2.8vw,36px);letter-spacing:-.03em}
+.key{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.key span{padding:7px 10px;border:1px solid var(--line);background:var(--paper);border-radius:999px;font-size:13px;font-weight:800}
+.key .changed{border-color:#9fb7dc;background:var(--change-soft);color:var(--change)}
+.route-list{display:grid;gap:20px}
+.route-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.route-header{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:14px;padding:17px 20px;border-bottom:1px solid var(--line);background:#fbfcfe}
+.route-index{width:42px;height:32px;display:grid;place-items:center;border-radius:10px;background:#e9edf4;color:#48566c;font-weight:900;font-variant-numeric:tabular-nums}
+.route-header h3{margin:0;font-size:19px;letter-spacing:-.015em}
+.route-columns{display:grid;grid-template-columns:1fr 1fr}
+.state-column{padding:20px;min-width:0}
+.state-column + .state-column{border-left:1px solid var(--line)}
+.state-heading{display:flex;align-items:center;margin-bottom:14px}
+.state-heading span{display:inline-flex;align-items:center;gap:8px;font-size:16px;font-weight:900}
+.state-heading span::before{content:"";width:11px;height:11px;border-radius:50%}
+.current-column .state-heading span{color:var(--current)}
+.current-column .state-heading span::before{background:var(--current)}
+.goal-column .state-heading span{color:var(--goal)}
+.goal-column .state-heading span::before{background:var(--goal)}
+.flow{display:grid}
+.flow-step{position:relative;display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;align-items:start;padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:#fff}
+.step-number{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:#edf0f5;color:#526074;font-size:14px;font-weight:900;font-variant-numeric:tabular-nums}
+.step-title{font-size:16px;font-weight:850;line-height:1.38}
+.step-note{margin-top:4px;color:var(--muted);font-size:14px;line-height:1.45}
+.tone-issue{border-color:#efb1bb;background:var(--issue-soft)}
+.tone-warn{border-color:#e7cc7b;background:var(--warn-soft)}
+.tone-changed{border-color:#9fb7dc;background:var(--change-soft);box-shadow:inset 4px 0 0 var(--change)}
+.flow-connector{height:36px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;align-items:center}
+.flow-connector span{justify-self:center;padding:3px 7px;border-radius:999px;border:1px solid #cfd6e0;background:#fff;color:#4e5d72;font-size:12px;font-weight:900;white-space:nowrap;z-index:1}
+.flow-connector i{position:relative;height:100%}
+.flow-connector i::before{content:"";position:absolute;left:20px;top:0;bottom:7px;width:2px;background:#a7b1c1}
+.flow-connector i::after{content:"";position:absolute;left:16px;bottom:5px;width:8px;height:8px;border-right:2px solid #a7b1c1;border-bottom:2px solid #a7b1c1;transform:rotate(45deg)}
+.compare-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;min-width:0}
+.panel-title{display:flex;align-items:center;gap:10px;margin:0 0 18px;font-size:19px}
+.panel-title::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--current)}
+.panel.goal .panel-title::before{background:var(--goal)}
+.current-stack,.goal-stack{display:grid;gap:12px}
+.block{padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:#fbfcfe}
+.block strong{display:block;font-size:16px}
+.block small{display:block;margin-top:4px;color:var(--muted);font-size:14px}
+.block.issue{border-color:#efb1bb;background:var(--issue-soft)}
+.input-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.input-grid .block{text-align:center;display:grid;place-items:center;min-height:78px}
+.arrow-down{height:39px;position:relative}
+.arrow-down::before{content:"";position:absolute;left:50%;top:0;bottom:9px;width:2px;background:#9ba7b9}
+.arrow-down::after{content:"";position:absolute;left:calc(50% - 5px);bottom:7px;width:10px;height:10px;border-right:2px solid #9ba7b9;border-bottom:2px solid #9ba7b9;transform:rotate(45deg)}
+.command-card{padding:18px;border:2px solid #7ebcab;border-radius:17px;background:var(--goal-soft);text-align:center}
+.command-card strong{font-size:18px}
+.command-code{display:inline-block;margin-top:8px;padding:8px 11px;border-radius:10px;background:#fff;border:1px solid #b8dcd3;font-size:14px;font-weight:800;word-break:break-word}
+.param-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:12px}
+.param-row span{padding:6px 9px;border:1px solid #c4ddd7;border-radius:999px;background:#fff;font-size:13px;font-weight:800}
+.output-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.output-pair .block{text-align:center}
+.info-table{display:grid;grid-template-columns:minmax(150px,.65fr) minmax(170px,.8fr) 1.35fr;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.info-table > div{padding:14px 16px;border-top:1px solid var(--line);min-width:0}
+.info-table > div:nth-child(-n+3){border-top:0}
+.info-table > div:nth-child(3n+2),.info-table > div:nth-child(3n+3){border-left:1px solid var(--line)}
+.table-head{font-size:15px;font-weight:900;background:#eef1f5}
+.field{font-size:15px;font-weight:850;background:#fbfcfe}
+.decision{font-size:15px;font-weight:900}
+.decision.keep{color:var(--goal);background:var(--goal-soft)}
+.decision.skip{color:#536276}
+.reason{font-size:15px}
+.reason small{display:block;margin-top:3px;color:var(--muted);font-size:13px}
+.lifecycle{display:grid;grid-template-columns:minmax(180px,.7fr) 1fr 1fr;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+.lifecycle > div{padding:14px 16px;border-top:1px solid var(--line)}
+.lifecycle > div:nth-child(-n+3){border-top:0}
+.lifecycle > div:nth-child(3n+2),.lifecycle > div:nth-child(3n+3){border-left:1px solid var(--line)}
+.life-head{font-size:15px;font-weight:900;background:#eef1f5}
+.life-head.current{color:var(--current);background:var(--current-soft)}
+.life-head.goal{color:var(--goal);background:var(--goal-soft)}
+.life-label{font-weight:850;background:#fbfcfe}
+.life-current.problem{background:var(--issue-soft)}
+.life-goal{background:var(--goal-soft)}
+.supply{display:grid;grid-template-columns:1fr 74px 1fr;align-items:center;gap:16px}
+.supply-side{display:grid;gap:12px}
+.supply-box{padding:17px;border:1px solid var(--line);border-radius:16px;background:#fff;text-align:center;font-weight:850}
+.supply-box.engine{border-color:#9fc8bd;background:var(--goal-soft)}
+.supply-arrow{display:grid;place-items:center;font-size:30px;color:#728097;font-weight:900}
+.site-box{padding:22px;border:2px solid #8ba9d1;border-radius:18px;background:var(--change-soft);text-align:center}
+.site-box strong{display:block;font-size:19px}
+.site-box small{display:block;margin-top:6px;color:var(--muted);font-size:14px}
+.download-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.download-pair div{padding:13px;border:1px solid #b9cce5;border-radius:13px;background:#fff;font-weight:850}
+.build-summary{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.build-table{display:grid;grid-template-columns:minmax(150px,.7fr) 1fr 54px 1fr;align-items:stretch;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.build-table > div{padding:15px 16px;border-top:1px solid var(--line);display:flex;align-items:center}
+.build-table > div:nth-child(-n+4){border-top:0}
+.build-label{font-size:16px;font-weight:850;background:#fbfcfe}
+.build-current{font-size:17px;font-weight:900;color:var(--current);background:var(--current-soft)}
+.build-goal{font-size:17px;font-weight:900;color:var(--goal);background:var(--goal-soft)}
+.build-arrow{justify-content:center;color:#69788e;font-size:22px;font-weight:900;background:#fff}
+.build-total{font-size:22px}
+.target-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:18px}
+.target-strip div{min-height:70px;padding:12px;display:grid;place-items:center;text-align:center;border:1px solid #9fc8bd;border-radius:14px;background:var(--goal-soft);font-size:14px;font-weight:850}
+.footnote{margin:13px 2px 0;color:var(--muted);font-size:13px;text-align:right}
+.footer{margin-top:30px;padding:14px 4px;color:#697386;font-size:13px;text-align:right}
+@media(max-width:1000px){
+  .route-columns,.compare-panel{grid-template-columns:1fr}
+  .state-column + .state-column{border-left:0;border-top:1px solid var(--line)}
+  .input-grid{grid-template-columns:1fr 1fr}
+  .supply{grid-template-columns:1fr}
+  .supply-arrow{transform:rotate(90deg)}
+  .target-strip{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .page{padding:18px 12px 50px}
+  .hero{padding:23px 20px;border-radius:20px}
+  .hero-pair{grid-template-columns:1fr}
+  .section{margin-top:30px}
+  .section-head{align-items:flex-start;flex-direction:column}
+  .key{justify-content:flex-start}
+  .route-header{padding:14px}
+  .route-header h3{font-size:17px}
+  .state-column{padding:14px}
+  .flow-step{padding:13px 12px;grid-template-columns:32px minmax(0,1fr)}
+  .step-title{font-size:15px}
+  .step-note{font-size:13px}
+  .input-grid,.output-pair,.download-pair{grid-template-columns:1fr}
+  .info-table,.lifecycle{grid-template-columns:1fr}
+  .info-table > div,.lifecycle > div{border-top:1px solid var(--line)!important;border-left:0!important}
+  .info-table > div:first-child,.lifecycle > div:first-child{border-top:0!important}
+  .table-head:nth-child(2),.table-head:nth-child(3),.life-head:nth-child(2),.life-head:nth-child(3){display:none}
+  .decision::before{content:"判断：";font-weight:700;color:var(--muted)}
+  .reason::before{content:"根拠：";font-weight:700;color:var(--muted)}
+  .life-current::before{content:"現行：";font-weight:800;color:var(--current)}
+  .life-goal::before{content:"目標：";font-weight:800;color:var(--goal)}
+  .build-table{grid-template-columns:1fr}
+  .build-table > div{border-top:1px solid var(--line)!important}
+  .build-table > div:first-child{border-top:0!important}
+  .build-arrow{display:none!important}
+  .build-current::before{content:"現行  ";font-size:13px}
+  .build-goal::before{content:"目標  ";font-size:13px}
+  .target-strip{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <div class="eyebrow">VOICEVOX INSTALLATION ROUTES</div>
+    <h1>インストール経路 — 現行と目標</h1>
+    <div class="hero-pair">
+      <div class="hero-state">現行<small>エンジンの保存先と操作が、起動経路や配布物に依存</small></div>
+      <div class="hero-state goal">目標<small><code>scope=user|machine</code> を共通のエンジン処理へ渡す</small></div>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="section-head">
+      <div><div class="section-kicker">INSTALLATION ROUTES</div><h2>インストール経路</h2></div>
+      <div class="key"><span>操作</span><span>自動</span><span class="changed">薄青の枠＝目標で変わる箇所</span></div>
+    </div>
+    <div class="route-list">
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">01</div>
+        <h3>Windows · 公式サイトからインストール</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">公式サイトでWindowsのインストーラーを選ぶ</div><div class="step-note">デバイスは選ばない</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">NSIS Webインストーラーを実行</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">個人用／全ユーザー用とエディターの保存先を選ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">エディターをインストール</div><div class="step-note">vvproj／vvppの関連付けを登録</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">VOICEVOXを自動起動</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">6</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンを個人領域へ自動インストール</div><div class="step-note">全ユーザー用を選んでも、実行したユーザーの領域に入る</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">7</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">公式サイトでデバイスを選ぶ</div><div class="step-note">同じエディターを使う入口を選ぶ</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">NSIS Webインストーラーを実行</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">個人用／全ユーザー用とエディターの保存先を選ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">エディターをインストール</div><div class="step-note">vvproj／vvppの関連付けを登録</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">インストーラーが scope とデバイスを実行バイナリへ渡す</div><div class="step-note">user または machine</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">6</span>
+          <div class="step-copy"><div class="step-title">共通のエンジン処理が固定保存先へインストール</div><div class="step-note">個人用または全ユーザー用</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">7</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">02</div>
+        <h3>Windows · インストール済みアプリ／エディターのアーカイブ版を直接起動</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">VOICEVOXを直接起動</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エンジン一覧を表示</div><div class="step-note">デフォルトエンジンが未インストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンを自動インストール</div><div class="step-note">Windowsでは起動経路を区別しない</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">VOICEVOXを直接起動</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エンジン一覧を表示</div><div class="step-note">デフォルトエンジンが未インストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">ダウンロードせず待つ</div><div class="step-note">利用者が操作するまで開始しない</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">オンラインまたはローカルのVVPPを選ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">共通のエンジン処理を scope=user で実行</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">6</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">03</div>
+        <h3>Windows · コマンドでインストール（オンライン）</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">端末管理ツールから分離版インストーラーを実行</div><div class="step-note">サイレント実行</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エディターと関連付けをインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">インストーラーが終了</div><div class="step-note">エディターの配置まで</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンは未インストール</div><div class="step-note">全体の成否を判定できない</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">端末管理ツールからインストーラーを実行</div><div class="step-note">scope とデバイスを渡す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エディターと関連付けをインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">実行バイナリがオンライン情報からVVPPを取得</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">指定された scope へデフォルトエンジンをインストール</div><div class="step-note">machine は管理者権限</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">終了コードで全体の成否を返す</div><div class="step-note">画面を表示しない</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">04</div>
+        <h3>Windows · コマンドでインストール（オフライン）</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">ローカルのエディター用パッケージを用意</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">NSIS Webインストーラーへ package-file を渡す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">エディターをインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンは未インストール</div><div class="step-note">通常のVVPP追加では代替できない</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">エディター用パッケージとVVPPを用意</div><div class="step-note">別フォルダー／読み取り専用媒体でも可</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">scope・デバイス・各ファイルの場所を渡す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">ネットワークに接続せずエディターをインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">実行バイナリがローカルVVPPを固定保存先へインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">終了コードで全体の成否を返す</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">05</div>
+        <h3>macOS · 一般利用者がDMGからインストール</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">DMGをダウンロードして開く</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">VOICEVOX.appをアプリケーションフォルダーへコピー</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">VOICEVOX.appを起動</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">エンジン一覧を表示</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">デバイスを選び「インストール」を押す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">6</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンを個人領域へインストール</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">7</span>
+          <div class="step-copy"><div class="step-title">「エディターを起動」を押す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">8</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">DMGをダウンロードして開く</div><div class="step-note">エディターのみ</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">VOICEVOX.appをアプリケーションフォルダーへコピー</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">VOICEVOX.appを起動</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">エンジン一覧を表示</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">オンラインまたはローカルのVVPPを選ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">6</span>
+          <div class="step-copy"><div class="step-title">共通のエンジン処理を scope=user で実行</div><div class="step-note">保存先は選ばない</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">7</span>
+          <div class="step-copy"><div class="step-title">「エディターを起動」を押す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">8</span>
+          <div class="step-copy"><div class="step-title">エディターを表示</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">06</div>
+        <h3>macOS · 組織で.appとデフォルトエンジンを配置</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">管理者がDMGを取得</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">VOICEVOX.appを /Applications へコピー</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">エディターの配置は完了</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">全ユーザー用の分離エンジンを入れる公式コマンドはない</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">エンジンまで含む終了コードを返せない</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">管理用スクリプト／MDMを実行</div><div class="step-note">PKGは作らない</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">DMGからVOICEVOX.appを /Applications へコピー</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">アプリ内の実行バイナリを scope=machine で実行</div><div class="step-note">オンラインまたはローカルVVPP</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">全ユーザー用の固定保存先へインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">終了コードで全体の成否を返す</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">07</div>
+        <h3>Linux · 公式サイトのインストールスクリプト</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">インストールスクリプトを実行</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エディター・アイコン・関連付けを個人用に配置</div><div class="step-note">個別の環境変数で保存先を変更可能</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">スクリプトが終了</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-issue">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンは未インストール</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">スクリプトへ scope・デバイス・入力元を渡す</div><div class="step-note">user または machine</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エディター・アイコン・関連付けを同じ scope へ配置</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">実行バイナリの共通エンジン処理を呼ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">デフォルトエンジンを固定保存先へインストール</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">終了コードで全体の成否を返す</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article>
+    <article class="route-card">
+      <header class="route-header">
+        <div class="route-index">08</div>
+        <h3>エディターのアーカイブ版 · エンジン同梱を廃止</h3>
+      </header>
+      <div class="route-columns">
+        <section class="state-column current-column">
+          <div class="state-heading"><span>現行</span></div>
+          <div class="flow"><div class="flow-step">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">公式サイトでパッケージ版を選ぶ</div><div class="step-note">OS・CPUアーキテクチャ・デバイス別</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エンジン同梱のZIP／tar.gzをダウンロード</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">展開してVOICEVOXを起動</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">アーカイブ内のエンジンを使用</div></div>
+        </div></div>
+        </section>
+        <section class="state-column goal-column">
+          <div class="state-heading"><span>目標</span></div>
+          <div class="flow"><div class="flow-step tone-changed">
+          <span class="step-number">1</span>
+          <div class="step-copy"><div class="step-title">公式サイトでOS・CPUアーキテクチャ・デバイスを選ぶ</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">2</span>
+          <div class="step-copy"><div class="step-title">エディターのアーカイブ版とVVPPを同じ画面から取得</div><div class="step-note">別ファイルのダウンロードセット</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">3</span>
+          <div class="step-copy"><div class="step-title">エディターを展開してVOICEVOXを起動</div></div>
+        </div><div class="flow-connector"><span>操作</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">4</span>
+          <div class="step-copy"><div class="step-title">ローカルのVVPPを選ぶ</div><div class="step-note">またはコマンドへ渡す</div></div>
+        </div><div class="flow-connector"><span>自動</span><i aria-hidden="true"></i></div><div class="flow-step tone-changed">
+          <span class="step-number">5</span>
+          <div class="step-copy"><div class="step-title">共通のエンジン処理でインストール</div><div class="step-note">エンジン同梱版は作らない</div></div>
+        </div></div>
+        </section>
+      </div>
+    </article></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="section-kicker">ENGINE OPERATIONS</div><h2>デフォルトエンジンのインストール・更新・削除</h2></div></div>
+    <div class="compare-panel">
+      <article class="panel">
+        <h3 class="panel-title">現行</h3>
+        <div class="current-stack">
+          <div class="block"><strong>エンジンの管理</strong><small>画面からダウンロード・インストール</small></div>
+          <div class="block"><strong>Windows初回起動</strong><small>画面の処理を自動で呼ぶ</small></div>
+          <div class="block issue"><strong>サイレントインストール</strong><small>エディターの配置で終了</small></div>
+          <div class="block issue"><strong>保存先</strong><small>起動したユーザーの userData に固定</small></div>
+        </div>
+      </article>
+      <article class="panel goal">
+        <h3 class="panel-title">目標</h3>
+        <div class="input-grid">
+          <div class="block"><strong>エンジンの管理</strong></div>
+          <div class="block"><strong>Windows<br>インストーラー</strong></div>
+          <div class="block"><strong>macOS<br>管理コマンド</strong></div>
+          <div class="block"><strong>Linux<br>スクリプト</strong></div>
+          <div class="block"><strong>直接コマンド</strong></div>
+          <div class="block"><strong>ローカルVVPP</strong></div>
+        </div>
+        <div class="arrow-down"></div>
+        <div class="command-card">
+          <strong>共通のエンジン処理</strong>
+          <div class="command-code">インストール・更新・削除</div>
+          <div class="param-row">
+            <span>scope=user | machine</span><span>デバイス</span><span>オンライン | VVPP</span>
+          </div>
+        </div>
+        <div class="arrow-down"></div>
+        <div class="output-pair">
+          <div class="block"><strong>個人用の固定保存先</strong><small>通常ユーザーが管理</small></div>
+          <div class="block"><strong>全ユーザー用の固定保存先</strong><small>管理者が管理</small></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="section-kicker">PERSISTED DATA</div><h2>エンジンと一緒に保存する情報</h2></div></div>
+    <div class="info-table">
+      <div class="table-head">項目</div><div class="table-head">判断</div><div class="table-head">根拠</div>
+      <div class="field">エンジンのUUID</div><div class="decision skip">追加保存しない</div><div class="reason"><code>engine_manifest.json</code> にある</div>
+      <div class="field">デバイス</div><div class="decision keep">保存する</div><div class="reason">更新時に同じ実行環境を選ぶため<small>runtime target として小さいメタデータに残す</small></div>
+      <div class="field">バージョン</div><div class="decision skip">追加保存しない</div><div class="reason"><code>engine_manifest.json</code> にある</div>
+      <div class="field">個人用／全ユーザー用</div><div class="decision skip">追加保存しない</div><div class="reason">保存されている固定ルートから判定できる</div>
+      <div class="field">管理したインストーラー</div><div class="decision skip">保存しない</div><div class="reason">エディターとエンジンの削除を分ける</div>
+      <div class="field">インストール完了</div><div class="decision skip">恒久保存しない</div><div class="reason">一時領域へ展開し、完了時に切り替える<small>途中のファイルは起動対象にしない</small></div>
+      <div class="field">メタデータ形式</div><div class="decision keep">保存する</div><div class="reason">将来の項目追加に備える<small>formatVersion ＋ runtime target</small></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="section-kicker">STORAGE & LIFECYCLE</div><h2>保存先・更新・アンインストール</h2></div></div>
+    <div class="lifecycle">
+      <div class="life-head">項目</div><div class="life-head current">現行</div><div class="life-head goal">目標</div>
+      <div class="life-label">エンジンの探索</div><div class="life-current problem">個人領域と同梱場所を列挙</div><div class="life-goal">個人用を優先し、なければ全ユーザー用</div>
+      <div class="life-label">個人用エンジン</div><div class="life-current">起動したユーザーの領域</div><div class="life-goal">scope=user でインストール・更新・削除</div>
+      <div class="life-label">全ユーザー用エンジン</div><div class="life-current problem">分離版では未対応</div><div class="life-goal">scope=machine。管理者だけが更新・削除</div>
+      <div class="life-label">エディターのアンインストール</div><div class="life-current problem">エンジンとの境界が経路ごとに異なる</div><div class="life-goal">エディターと関連付けだけを削除</div>
+      <div class="life-label">エンジンの削除</div><div class="life-current problem">デフォルトエンジンだけを削除できない</div><div class="life-goal">画面またはコマンドで明示的に削除</div>
+      <div class="life-label">使用中の全ユーザー用エンジン</div><div class="life-current problem">他プロセスを含む排他がない</div><div class="life-goal">変更せず失敗を返す</div>
+      <div class="life-label">エディターの更新</div><div class="life-current">配布経路によってエンジンも入れ替わる</div><div class="life-goal">エンジンを残す</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="section-kicker">DOWNLOAD SET</div><h2>公式サイトから渡すもの</h2></div></div>
+    <div class="panel">
+      <div class="supply">
+        <div class="supply-side">
+          <div class="supply-box"><strong>VOICEVOXエディター</strong><br>インストーラー／DMG／アーカイブ</div>
+          <div class="supply-box engine"><strong>デフォルトエンジン</strong><br>選んだデバイスのVVPP</div>
+        </div>
+        <div class="supply-arrow">→</div>
+        <div class="site-box">
+          <strong>voicevox_blog のダウンロード画面</strong>
+          <small>OS・CPUアーキテクチャ・デバイスを一度選ぶ</small>
+          <div class="download-pair"><div>エディターを取得</div><div>VVPPを取得</div></div>
+          <small>同じ画面から取得する。エンジン同梱の配布物は作らない。</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="section-kicker">EDITOR BUILD TARGETS</div><h2>エディターの生成単位（1リリースあたり）</h2></div></div>
+    <div class="build-summary">
+      <div class="build-table">
+        <div class="build-label">Windows</div><div class="build-current">4</div><div class="build-arrow">→</div><div class="build-goal">1</div>
+        <div class="build-label">macOS</div><div class="build-current">4</div><div class="build-arrow">→</div><div class="build-goal">2</div>
+        <div class="build-label">Linux</div><div class="build-current">5</div><div class="build-arrow">→</div><div class="build-goal">2</div>
+        <div class="build-label build-total">合計</div><div class="build-current build-total">13</div><div class="build-arrow">→</div><div class="build-goal build-total">5</div>
+      </div>
+      <div class="target-strip">
+        <div>Windows<br>x64</div><div>macOS<br>x64</div><div>macOS<br>arm64</div><div>Linux<br>x64</div><div>Linux<br>arm64</div>
+      </div>
+      <div class="footnote">デバイス別・エンジン同梱別のエディター生成を廃止。VVPPの生成数は含めない。</div>
+    </div>
+  </section>
+
+  <footer class="footer">main 70805c6 と 2026-10-28 時点の整理</footer>
+</main>
+</body>
+</html>
